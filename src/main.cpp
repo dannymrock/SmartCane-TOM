@@ -8,7 +8,7 @@
 //debug mode
 //###################################################################################################################################
 //#define DEBUG
-#define DEBUGCOMPASS
+//#define DEBUGCOMPASS
 //###################################################################################################################################
 
 
@@ -31,11 +31,16 @@ unsigned long lastCOMOn = 0;
 unsigned long lastSensedUSTime = 0;
 float distanceBuffer[5];
 int numMeasurment = 0;
+//float min = 999;
+//float max = 0;
+int hasDetected = 0;
+unsigned long playMultipleStartTime = 0;
 
 //mp3 variables
 unsigned long lastPlayingTime = 0;
 unsigned int playTime = 0;
 DFRobotDFPlayerMini myDFPlayer;
+int playMultipleMP3ID = 0;
 
 
 //compass variables
@@ -73,52 +78,96 @@ void playMP3(int audio){ //takes id of the mp3 to play, plays mp3, updates isPla
   switch (audio)
   {
   case 1:
-    lastPlayingTime = millis();
-    playTime = 3000;//change 1500 to real time
-    myDFPlayer.play(1);
+    lastPlayingTime = millis(); // 5 metros
+    playTime = 2000;//change 1500 to real time
+    myDFPlayer.play(audio);
     break;
   case 2:
-    lastPlayingTime = millis();
-    playTime = 3000;//change 1500 to real time
-    myDFPlayer.play(2);
+    lastPlayingTime = millis(); //obstaculo detectado
+    playTime = 2500;//change 1500 to real time
+    myDFPlayer.play(audio);
     break;
   case 3:
-    lastPlayingTime = millis();
-    playTime = 3000;//change 1500 to real time
-    myDFPlayer.play(3);
+    lastPlayingTime = millis(); // 6 metros
+    playTime = 2000;//change 1500 to real time
+    myDFPlayer.play(audio);
     break;
   case 4:
-    lastPlayingTime = millis();
-    playTime = 3000;//change 1500 to real time
-    myDFPlayer.play(4);
+    lastPlayingTime = millis();  //4 metros
+    playTime = 2000;//change 1500 to real time
+    myDFPlayer.play(audio);
     break;
   case 5:
-    lastPlayingTime = millis();
-    playTime = 3000;//change 1500 to real time
-    myDFPlayer.play(5);
+    lastPlayingTime = millis();  //
+    playTime = 2000;// 3 metros
+    myDFPlayer.play(audio);
     break;
   case 6:
-    lastPlayingTime = millis();
+    lastPlayingTime = millis(); // 2 metros
     playTime = 3000;//change 1500 to real time
-    myDFPlayer.play(6);
+    myDFPlayer.play(audio);
     break;
   case 7:
-    lastPlayingTime = millis();
+    lastPlayingTime = millis(); //deteccion activada
     playTime = 3000;//change 1500 to real time
-    myDFPlayer.play(7);
+    myDFPlayer.play(audio);
     break;
   case 8:
-    lastPlayingTime = millis();
+    lastPlayingTime = millis(); //deteccion desactivada
     playTime = 3000;//change 1500 to real time
-    myDFPlayer.play(8);
+    myDFPlayer.play(audio);
     break;
-
+    case 9:
+    lastPlayingTime = millis(); //norte
+    playTime = 4000;//change 1500 to real time
+    myDFPlayer.play(audio);
+    break;
+  case 21:
+    lastPlayingTime = millis(); //
+    playTime = 4000;//change 1500 to real time
+    myDFPlayer.play(audio);
+    break;
+  case 19:
+    lastPlayingTime = millis();
+    playTime = 4000;//change 1500 to real time
+    myDFPlayer.play(audio);
+    break;
+  case 17:
+    lastPlayingTime = millis();
+    playTime = 5000;//change 1500 to real time
+    myDFPlayer.play(audio);
+    break;
+  case 15:
+    lastPlayingTime = millis();
+    playTime = 5000;//change 1500 to real time
+    myDFPlayer.play(audio);
+    break;
+  case 13:
+    lastPlayingTime = millis();
+    playTime = 5000;//change 1500 to real time
+    myDFPlayer.play(audio);
+    break;
+  case 11:
+    lastPlayingTime = millis();
+    playTime = 5000;//change 1500 to real time
+    myDFPlayer.play(audio);
+    break;
+  case 23:
+    lastPlayingTime = millis();
+    playTime = 4000;//change 1500 to real time
+    myDFPlayer.play(audio);
+    break;
   
   default:
+  #ifdef DEBUG
     Serial.println("error: song not found");
+  #endif
     break;
   }
-  } Serial.println("error: song already playing");
+  } 
+  #ifdef DEBUG
+    Serial.println("error: song already playing");
+  #endif
 }
 
 void updateMP3(){
@@ -164,7 +213,7 @@ void updateMP3(){
 
 float readDistance() {
   unsigned long sensingTime = millis();
-  if (sensingTime - lastSensedUSTime > 50) {
+  if (sensingTime - lastSensedUSTime > 25) {
     lastSensedUSTime = sensingTime;
     return Sonar.Distance(cm);
   } else {
@@ -173,14 +222,32 @@ float readDistance() {
 }
 
 int analyzeDistance(float distanceCM) {
-  if (distanceCM < 200) return 8;
-  else if (distanceCM < 300) return 7;
-  else if (distanceCM < 400) return 6;
-  else if (distanceCM < 500) return 5;
-  else if (distanceCM < 600) return 4;
-  else return 3;
+if (distanceCM < 200) {
+hasDetected++;
+return 6;
 }
-
+else if (distanceCM < 300) {
+hasDetected++;
+return 6;
+}
+else if (distanceCM < 400) {
+hasDetected++;
+return 5;
+}
+else if (distanceCM < 500) {
+hasDetected++;
+return 4;
+}
+else if (distanceCM < 600) {
+hasDetected++;
+return 1;
+}
+else if (distanceCM < 630) {
+hasDetected++;
+return 3;
+}
+else return -1;
+}
 
 int analizeCompass(){// measures compas and outputs the correct audio id to play
   
@@ -212,7 +279,7 @@ int analizeCompass(){// measures compas and outputs the correct audio id to play
   Serial.println(theta);
   #endif
 
-  if (theta >= 0 && theta < 22.5) {
+  if ((theta >= 0 && theta < 22.5) || (theta >= 337.5 && theta < 360)) {
 #ifdef DEBUGCOMPASS
     Serial.println(" heading North");
 #endif
@@ -221,48 +288,46 @@ int analizeCompass(){// measures compas and outputs the correct audio id to play
 #ifdef DEBUGCOMPASS 
     Serial.println(" heading North East");
 #endif
-    return 10; // North East
+    return 13; // North East
 } else if (theta >= 67.5 && theta < 112.5) {
 #ifdef DEBUGCOMPASS
     Serial.println(" heading East");
 #endif
-    return 11; // East
+    return 21; // East
 } else if (theta >= 112.5 && theta < 157.5) {
 #ifdef DEBUGCOMPASS
     Serial.println(" heading South East");
 #endif
-    return 12; // South East
+    return 17; // South East
 } else if (theta >= 157.5 && theta < 202.5) {
 #ifdef DEBUGCOMPASS
     Serial.println(" heading South");
 #endif
-    return 13; // South
+    return 23; // South
 } else if (theta >= 202.5 && theta < 247.5) {
 #ifdef DEBUGCOMPASS
     Serial.println(" heading South West");
 #endif
-    return 14; // South West
+    return 15; // South West
 } else if (theta >= 247.5 && theta < 292.5) {
 #ifdef DEBUGCOMPASS
     Serial.println(" heading West");
 #endif
-    return 15; // West
+    return 19; // West
 } else if (theta >= 292.5 && theta < 337.5) {
 #ifdef DEBUGCOMPASS
     Serial.println(" heading North West");
 #endif
-    return 16; // North West
+    return 11; // North West
 } else {
 #ifdef DEBUGCOMPASS
-    Serial.println(" heading North");
+    Serial.println("error ");
 #endif
-    return 9; // North
+    return -1; // North
 
 }
 
 }
-
-
 
 void buttonUSISR(){ //Ultra Sonic Sensor Interuption, true/false flag swich
   unsigned long interruptTime = millis();
@@ -274,8 +339,11 @@ void buttonUSISR(){ //Ultra Sonic Sensor Interuption, true/false flag swich
     Serial.println("Changing button");
     if(isUSOn){
       isUSOn = false;
+      playMP3(8);
+      hasDetected = 0;
     } else {
       isUSOn = true;
+      playMP3(7);
     }
     
   }
@@ -291,6 +359,16 @@ float averageFloat(float arr[5]) {
     return total;
 }
 
+float minFloat(float arr[5]){
+  float min = arr[0];
+  for(int i = 1; i < 5; i++){
+    if(arr[i] < min){
+      min = arr[i];
+    }
+  }
+  return min;
+}
+
 void buttonCOMISR(){ //Compass Interuption, true flag
   unsigned long interruptTime = millis();
   #ifdef DEBUG
@@ -301,6 +379,21 @@ void buttonCOMISR(){ //Compass Interuption, true flag
   }
   lastCOMOn = interruptTime;
 }
+
+void playMultipleMP3ToDetect(int ID){
+  if(playMultipleStartTime == 0){
+    playMultipleMP3ID = ID;
+    playMP3(2);
+    playMultipleStartTime = millis();
+  } else {
+    unsigned long currentMultipleTime = millis();
+    if(currentMultipleTime - playMultipleStartTime > 2500){
+      playMP3(playMultipleMP3ID);
+      playMultipleStartTime = 0;
+    }
+  }
+}
+
 
 //setup and loop methods
 //###################################################################################################################################
@@ -336,16 +429,25 @@ void loop(){
   if(isUSOn)
   {
     if(numMeasurment < 5){
-      if(readDistance() != -1){
-      distanceBuffer[numMeasurment] = readDistance();
+
+      float measurment = readDistance();
+      if(measurment != -1){
+      distanceBuffer[numMeasurment] = measurment;
+      //if(measurment > max) max = measurment;
+      //if(measurment < min) min = measurment;
       numMeasurment++;
       }
     } else if (numMeasurment == 5){
       float avrg = averageFloat(distanceBuffer);
       int mp3 = analyzeDistance(avrg);
       Serial.println(avrg);
-      playMP3(mp3);
+      if(hasDetected == 1){
+        playMultipleMP3ToDetect(mp3);
+        hasDetected++;
+      } else playMP3(mp3);
       numMeasurment = 0;
+      //max = 0;
+      //min = 999;
     }
     
     
