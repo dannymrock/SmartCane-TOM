@@ -157,6 +157,11 @@ void playMP3(int audio){ //takes id of the mp3 to play, plays mp3, updates isPla
     playTime = 4000;//change 1500 to real time
     myDFPlayer.play(audio);
     break;
+  case 24:
+    lastPlayingTime = millis();
+    playTime = 500;//change 1500 to real time
+    myDFPlayer.play(2);
+    break;
   
   default:
   #ifdef DEBUG
@@ -164,6 +169,8 @@ void playMP3(int audio){ //takes id of the mp3 to play, plays mp3, updates isPla
   #endif
     break;
   }
+  //set a pause of 1s for each track
+  playTime += 1000;
   } 
   #ifdef DEBUG
     Serial.println("error: song already playing");
@@ -177,43 +184,9 @@ void updateMP3(){
   }
 }
 
-/*int analizeDistance(){ // takes in distance, returns the number of the audio that must be played
-  
-  #ifdef DEBUG
-  Serial.println("began analing: ");
-  #endif 
-  unsigned long sensingTime = millis();
-  #ifdef DEBUG
-  Serial.print("dt from analysed: ");
-  Serial.println(sensingTime - lastSencedUSTime);
-  Serial.print("distance: ");
-  Serial.println(Sonar.Distance(cm));
-  #endif 
-  if(sensingTime - lastSencedUSTime > 500){
-    lastSencedUSTime = sensingTime;
-    #ifdef DEBUG
-    Serial.print("reading...: ");
-    #endif 
-    distanceBuffer[i] = Sonar.Distance(cm);
-    distanceCM;
-    Serial.print("cm: ");
-    Serial.println(distanceCM);
-    if(distanceCM < 200) return 8;
-    else if(distanceCM < 300) return 7; 
-    else if (distanceCM < 400) return 6;
-    else if (distanceCM < 500) return 5;
-    else if (distanceCM < 600) return 4;
-    else return 3;
-  } else {
-    return -1;
-  }
-}
-
-*/
-
 float readDistance() {
   unsigned long sensingTime = millis();
-  if (sensingTime - lastSensedUSTime > 25) {
+  if (sensingTime - lastSensedUSTime > 50) {
     lastSensedUSTime = sensingTime;
     return Sonar.Distance(cm);
   } else {
@@ -222,29 +195,34 @@ float readDistance() {
 }
 
 int analyzeDistance(float distanceCM) {
-if (distanceCM < 200) {
+  
+if (distanceCM < 180) {
 hasDetected++;
-return 6;
+return 24;  //play "obstáculo detectado"
 }
-else if (distanceCM < 300) {
+else if (distanceCM < 250) {
 hasDetected++;
-return 6;
+return 6; // play "2 metros"
 }
-else if (distanceCM < 400) {
+else if (distanceCM < 350) {
 hasDetected++;
-return 5;
+return 5; // play "3 metros"
 }
-else if (distanceCM < 500) {
+else if (distanceCM < 450) {
 hasDetected++;
-return 4;
+return 4; // play "4 metros"
+}
+else if (distanceCM < 550) {
+hasDetected++;
+return 1; // play "5 metros"
 }
 else if (distanceCM < 600) {
 hasDetected++;
-return 1;
+return 3; // play "6 metros"
 }
 else if (distanceCM < 630) {
-hasDetected++;
-return 3;
+hasDetected = 0;
+return -1; // do not play any track
 }
 else return -1;
 }
@@ -260,20 +238,12 @@ int analizeCompass(){// measures compas and outputs the correct audio id to play
   float theta = atan2(my, mx);
   theta = theta * (180 / M_PI);
   theta -= declination;
+  // 186 degrees is the factor of correction because of the positioning of the sensor in the case
+  // I measured the difference using a digital compass in a mobile phone as a reference device
+  theta -= 186;
 
   if (theta < 0) theta += 360;
 
-  
-
- //GPT4 code:
-  /*readRawMagnetometerData(&mx, &my, &mz);
-  float theta = atan2(my, mx);
-  theta = theta * (180 / M_PI);
-  theta -= declination;
-
-  if (theta < 0) theta += 360;
-  //end of GPT4 code
-*/
   #ifdef DEBUGCOMPASS
   Serial.print("compass reading: ");
   Serial.println(theta);
@@ -449,24 +419,6 @@ void loop(){
       //max = 0;
       //min = 999;
     }
-    
-    
-    /*
-    int trackID = analizeDistance();
-    #ifdef DEBUG
-    Serial.print("analized as follows: ");
-    Serial.println(trackID);
-    #endif
-    if(trackID !=  -1){
-      #ifdef DEBUG
-      Serial.print("id to be played: ");
-      Serial.println(trackID);
-      #endif
-      playMP3(trackID);
-
-    }
-  }
-  */
   }
 
   if(isCOMOn){
