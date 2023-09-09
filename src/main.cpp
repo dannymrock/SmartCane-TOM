@@ -7,8 +7,8 @@
 
 //debug mode
 //###################################################################################################################################
-//#define DEBUG
-//#define DEBUGCOMPASS
+#define DEBUG
+#define DEBUGCOMPASS
 //###################################################################################################################################
 
 
@@ -99,7 +99,7 @@ void playMP3(int audio){ //takes id of the mp3 to play, plays mp3, updates isPla
     break;
   case 5:
     lastPlayingTime = millis();  //
-    playTime = 2000;// 3 metros
+    playTime = 2200;// 3 metros
     myDFPlayer.play(audio);
     break;
   case 6:
